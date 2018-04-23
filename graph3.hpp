@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include <stack>
+#include <string>
 
 template<class VDATA, class EDATA>
 class Graph
@@ -263,5 +264,10 @@ public:
         }
 
         return nullptr;
+    }
+
+    void save_graph(char* filename)
+    {
+
     }
 };
