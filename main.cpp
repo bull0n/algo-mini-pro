@@ -138,6 +138,7 @@ int main()
     //    std::cout << "dpi G2 **********\n";
     //    visite_profondeur(g2);
 
-    Graph<std::string, int> g3 = graph_from_file("tesfdsfst.dot");
+    Graph<std::string, int> g3 = graph_from_file("test.dot");
     affiche(g3);
+    g3.save_graph("test2.dot");
 }

@@ -4,6 +4,8 @@
 #include <set>
 #include <stack>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 template<class VDATA, class EDATA>
 class Graph
@@ -266,8 +268,22 @@ public:
         return nullptr;
     }
 
-    void save_graph(char* filename)
+    void save_graph(std::string filename)
     {
+        std::ofstream file(filename);
 
+        file << "graph { " << std::endl;
+        file << "\tlabelloc=\"t\";labeljust=\"l\";label=\"np=8 l=2-4 m=20-40\"" << std::endl;
+
+        for(unsigned int i = 0; i < this->edges.size(); i++)
+        {
+            file << "\t" << this->edges[i]->get_source()->get_value()
+                 << " -- " << this->edges[i]->get_destination()->get_value()
+                 << " [label=" << this->edges[i]->get_weight() << "]" << std::endl;
+        }
+
+        file << "}" << std::endl;
+
+        file.close();
     }
 };
