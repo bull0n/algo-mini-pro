@@ -251,4 +251,17 @@ public:
 	}
 
 	Vertex* get_vertex(int i) { return vertices[i]; }
+
+    Vertex* get_vertex_data(VDATA data)
+    {
+        for(unsigned int i = 0; i < this->vertices.size(); i++)
+        {
+            if(vertices[i]->get_value() == data)
+            {
+                return vertices[i];
+            }
+        }
+
+        return nullptr;
+    }
 };
