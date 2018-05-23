@@ -10,69 +10,65 @@ void rempli(Graph<int,int>& g)
     std::vector<Graph<int,int>::Vertex*> vt;
     std::vector<Graph<int,int>::Edge*> et;
 
-    for (int i=10; i<=50; i+=10)
-    {
+    for (int i=0; i<6; i++)
         vt.push_back(g.add_vertex(i));
-    }
 
-    int src[] = {0, 0, 1, 1, 2, 2, 3, -1};
-    int dst[] = {1, 2, 2, 3, 3, 4, 4};
-
-    for (int i=0; src[i] >= 0; i++)
-    {
+    int src[] = {0, 0, 1, 2, 3, 4, -1};
+    int dst[] = {1, 2, 3, 4, 5, 5};
+    for (int i=0; src[i] >= 0; i++) {
         g.add_edge(i+1, vt[src[i]], vt[dst[i]]);
-    }
-}
-
-void affiche(Graph<int,int>& g)
-{
-    std::string lien = g.is_directed() ? " -> " : " -- ";
-
-    for (Graph<int,int>::VertexIterator vi = g.vertex_iterator(); vi.has_next(); vi.next())
-    {
-        Graph<int,int>::Vertex* curr = vi.current();
-        std::cout << "vertex [" << curr->get_value() << "]" << std::endl;
-
-        for (Graph<int,int>::Vertex::NeighborEdgeIterator ni = curr->neighbor_iterator(); ni.has_next(); ni.next())
-        {
-            Graph<int,int>::Edge* neighbor_edge = ni.current();
-            Graph<int,int>::Vertex* neighbor = neighbor_edge->get_destination(curr);
-            std::cout << "  edge " << curr->get_value() << lien << neighbor->get_value() << " [" << neighbor_edge->get_weight() << "] " << std::endl;
-        }
     }
 }
 
 void affiche(Graph<std::string,int>& g)
 {
     std::string lien = g.is_directed() ? " -> " : " -- ";
-
-    for (Graph<std::string,int>::VertexIterator vi = g.vertex_iterator(); vi.has_next(); vi.next())
-    {
-        Graph<std::string,int>::Vertex* curr = vi.current();
+    for (auto vi = g.vertex_iterator(); vi.has_next(); vi.next()) {
+        auto curr = vi.current();
         std::cout << "vertex [" << curr->get_value() << "]" << std::endl;
-
-        for (Graph<std::string,int>::Vertex::NeighborEdgeIterator ni = curr->neighbor_iterator(); ni.has_next(); ni.next())
-        {
-            Graph<std::string,int>::Edge* neighbor_edge = ni.current();
-            Graph<std::string,int>::Vertex* neighbor = neighbor_edge->get_destination(curr);
+        for (auto ni = curr->neighbor_iterator(); ni.has_next(); ni.next()) {
+            auto neighbor_edge = ni.current();
+            auto neighbor = neighbor_edge->get_destination(curr);
             std::cout << "  edge " << curr->get_value() << lien << neighbor->get_value() << " [" << neighbor_edge->get_weight() << "] " << std::endl;
         }
     }
 }
 
-void visite_profondeur(Graph<int,int>& g)
+void visite_profondeur(Graph<std::string,int>& g)
 {
-    Graph<int,int>::Vertex* v = g.get_vertex(0);
+    auto v = g.get_vertex(0);
 
-    for (Graph<int,int>::DepthFirstIterator dfi = g.depth_first_iterator(v); dfi.has_next(); dfi.next())
-    {
-        std::cout << "visit " << dfi.current()->get_value() << std::endl;
+    for (auto i = g.depth_first_iterator(v); i.has_next(); i.next()) {
+        std::cout << "visit " << i.current()->get_value() << std::endl;
     }
 }
 
+void visite_largeur(Graph<std::string,int>& g)
+{
+    auto v = g.get_vertex(0);
+    for (auto i = g.breadth_first_iterator(v); i.has_next(); i.next()) {
+        std::cout << "visit " << i.current()->get_value() << std::endl;
+    }
+}
+
+void tous_tests(std::string name, Graph<std::string,int>& g)
+{
+    std::cout << name << " **********\n";
+    affiche(g);
+    std::cout << "prof " << name << " **********\n";
+    visite_profondeur(g);
+    std::cout << "larg " << name << " **********\n";
+    visite_largeur(g);
+}
+
+
 Graph<std::string, int> graph_from_file(std::string filename)
 {
-    Graph<std::string, int> g(false);
+    std::function<int(int)> max = [](int i) { return 10000; };
+    std::function<int(int)> min = [](int i) { return 0; };
+    std::function<int(int)> priority = [](int i) { return i; };
+
+    Graph<std::string, int> g(false, max, min, priority);
 
     std::ifstream file;
     std::set<std::string> set_firstnames;
@@ -122,23 +118,48 @@ Graph<std::string, int> graph_from_file(std::string filename)
     return g;
 }
 
+void minimum_spanning_tree(Graph<std::string, int> g)
+{
+    for(auto i = g.min_spanning_tree_iterator(); i.has_next(); i.next())
+    {
+        i.current()->mark_red();
+    }
+
+    g.save_graph("min_spanning_tree.dot");
+}
+
+void shortest_path_from_all(Graph<std::string, int> g)
+{
+    Graph<std::string, int>::Vertex* end = g.vertex_iterator().current();
+
+    for(auto itVertices = g.vertex_iterator(); itVertices.has_next(); itVertices.next())
+    {
+        auto start = itVertices.current();
+
+        if(start->get_value() != end->get_value())
+        {
+            for(auto itSPI = g.shortest_path_iterator(start, end); itSPI.has_next(); itSPI.next())
+            {
+                itSPI.current()->mark_red();
+            }
+        }
+
+        g.save_graph("shortest_path_from_"+ start->get_value() +"_to_"+end->get_value()+".dot");
+
+        for(auto itEdge = g.edge_iterator(); itEdge.has_next(); itEdge.next())
+        {
+            itEdge.current()->unmark_red();
+        }
+    }
+}
+
 int main()
 {
-    //    Graph<int,int> g1(true);
-    //    rempli(g1);
-    //    std::cout << "G1 **********\n";
-    //    affiche(g1);
-    //    std::cout << "dpi G1 **********\n";
-    //    visite_profondeur(g1);
-
-    //    Graph<int,int> g2(false);
-    //    rempli(g2);
-    //    std::cout << "G2 **********\n";
-    //    affiche(g2);
-    //    std::cout << "dpi G2 **********\n";
-    //    visite_profondeur(g2);
-
     Graph<std::string, int> g3 = graph_from_file("test.dot");
     affiche(g3);
-    g3.save_graph("test2.dot");
+
+    minimum_spanning_tree(g3);
+
+    shortest_path_from_all(g3);
+
 }
