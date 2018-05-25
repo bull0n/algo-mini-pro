@@ -6,4 +6,4 @@ CONFIG -= qt
 SOURCES += main.cpp
 
 HEADERS += \
-    graph3.hpp
+    graph.hpp

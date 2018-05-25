@@ -3,30 +3,21 @@
 #include <fstream>
 #include <regex>
 
-#include "graph3.hpp"
+#include "graph.hpp"
 
-void rempli(Graph<int,int>& g)
-{
-    std::vector<Graph<int,int>::Vertex*> vt;
-    std::vector<Graph<int,int>::Edge*> et;
-
-    for (int i=0; i<6; i++)
-        vt.push_back(g.add_vertex(i));
-
-    int src[] = {0, 0, 1, 2, 3, 4, -1};
-    int dst[] = {1, 2, 3, 4, 5, 5};
-    for (int i=0; src[i] >= 0; i++) {
-        g.add_edge(i+1, vt[src[i]], vt[dst[i]]);
-    }
-}
+#define WEIGHT_MAX 10000
 
 void affiche(Graph<std::string,int>& g)
 {
-    std::string lien = g.is_directed() ? " -> " : " -- ";
-    for (auto vi = g.vertex_iterator(); vi.has_next(); vi.next()) {
+    std::string lien = " -- ";
+
+    for (auto vi = g.vertex_iterator(); vi.has_next(); vi.next())
+    {
         auto curr = vi.current();
         std::cout << "vertex [" << curr->get_value() << "]" << std::endl;
-        for (auto ni = curr->neighbor_iterator(); ni.has_next(); ni.next()) {
+
+        for (auto ni = curr->neighbor_iterator(); ni.has_next(); ni.next())
+        {
             auto neighbor_edge = ni.current();
             auto neighbor = neighbor_edge->get_destination(curr);
             std::cout << "  edge " << curr->get_value() << lien << neighbor->get_value() << " [" << neighbor_edge->get_weight() << "] " << std::endl;
@@ -34,37 +25,9 @@ void affiche(Graph<std::string,int>& g)
     }
 }
 
-void visite_profondeur(Graph<std::string,int>& g)
-{
-    auto v = g.get_vertex(0);
-
-    for (auto i = g.depth_first_iterator(v); i.has_next(); i.next()) {
-        std::cout << "visit " << i.current()->get_value() << std::endl;
-    }
-}
-
-void visite_largeur(Graph<std::string,int>& g)
-{
-    auto v = g.get_vertex(0);
-    for (auto i = g.breadth_first_iterator(v); i.has_next(); i.next()) {
-        std::cout << "visit " << i.current()->get_value() << std::endl;
-    }
-}
-
-void tous_tests(std::string name, Graph<std::string,int>& g)
-{
-    std::cout << name << " **********\n";
-    affiche(g);
-    std::cout << "prof " << name << " **********\n";
-    visite_profondeur(g);
-    std::cout << "larg " << name << " **********\n";
-    visite_largeur(g);
-}
-
-
 Graph<std::string, int> graph_from_file(std::string filename)
 {
-    std::function<int(int)> max = [](int i) { return 10000; };
+    std::function<int(int)> max = [](int i) { return WEIGHT_MAX; };
     std::function<int(int)> min = [](int i) { return 0; };
     std::function<int(int)> priority = [](int i) { return i; };
 
@@ -124,8 +87,10 @@ void minimum_spanning_tree(Graph<std::string, int> g)
     {
         i.current()->mark_red();
     }
+    const std::string filename = "min_spanning_tree.dot";
 
-    g.save_graph("min_spanning_tree.dot");
+    g.save_graph(filename);
+    std::cout << "minimum spanning tree printed in " << filename << std::endl;
 }
 
 void shortest_path_from_all(Graph<std::string, int> g)
@@ -144,7 +109,11 @@ void shortest_path_from_all(Graph<std::string, int> g)
             }
         }
 
-        g.save_graph("shortest_path_from_"+ start->get_value() +"_to_"+end->get_value()+".dot");
+        const std::string filename = "shortest_path_from_"+ start->get_value() +"_to_"+end->get_value()+".dot";
+
+        g.save_graph(filename);
+
+        std::cout << "path from " << start->get_value() << " to " << end->get_value() << " printed in " << filename << std::endl;
 
         for(auto itEdge = g.edge_iterator(); itEdge.has_next(); itEdge.next())
         {
@@ -153,13 +122,52 @@ void shortest_path_from_all(Graph<std::string, int> g)
     }
 }
 
+void shortest_path_pivot(Graph<std::string, int> g)
+{
+    int sumWeight = WEIGHT_MAX;
+    Graph<std::string, int>::Vertex* v;
+
+    for(auto itVertex = g.vertex_iterator(); itVertex.has_next(); itVertex.next())
+    {
+        int sumEdgesCurrentVertex = 0;
+
+        for(auto itSp = g.shortest_path_tree_iterator(itVertex.current()); itSp.has_next(); itSp.next())
+        {
+            sumEdgesCurrentVertex += itSp.current()->get_weight();
+        }
+
+        if(sumEdgesCurrentVertex < sumWeight)
+        {
+            v = itVertex.current();
+            sumWeight = sumEdgesCurrentVertex;
+        }
+    }
+
+    for(auto itSp = g.shortest_path_tree_iterator(v); itSp.has_next(); itSp.next())
+    {
+        itSp.current()->mark_red();
+    }
+
+    const std::string filename = "pivot.dot";
+
+    g.save_graph(filename, "\tlabelloc=\"t\";labeljust=\"l\";label=\"totalweight="+std::to_string(sumWeight)+"\"");
+
+    std::cout << "pivot printed in " << filename << std::endl;
+}
+
 int main()
 {
     Graph<std::string, int> g3 = graph_from_file("test.dot");
-    affiche(g3);
+
+    std::cout << std::endl << "---------------------- minimum spanning tree -----------------" << std::endl;
 
     minimum_spanning_tree(g3);
 
+     std::cout << std::endl << "---------------------- shortest path -----------------" << std::endl;
+
     shortest_path_from_all(g3);
 
+     std::cout << std::endl << "---------------------- shortest path pivot -----------------" << std::endl;
+
+    shortest_path_pivot(g3);
 }
