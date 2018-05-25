@@ -101,24 +101,25 @@ void shortest_path_from_all(Graph<std::string, int> g)
     {
         auto start = itVertices.current();
 
-        if(start->get_value() != end->get_value())
+        if(start != end)
         {
             for(auto itSPI = g.shortest_path_iterator(start, end); itSPI.has_next(); itSPI.next())
             {
                 itSPI.current()->mark_red();
             }
+
+            const std::string filename = "shortest_path_from_"+ start->get_value() +"_to_"+end->get_value()+".dot";
+
+            g.save_graph(filename);
+
+            std::cout << "path from " << start->get_value() << " to " << end->get_value() << " printed in " << filename << std::endl;
+
+            for(auto itEdge = g.edge_iterator(); itEdge.has_next(); itEdge.next())
+            {
+                itEdge.current()->unmark_red();
+            }
         }
 
-        const std::string filename = "shortest_path_from_"+ start->get_value() +"_to_"+end->get_value()+".dot";
-
-        g.save_graph(filename);
-
-        std::cout << "path from " << start->get_value() << " to " << end->get_value() << " printed in " << filename << std::endl;
-
-        for(auto itEdge = g.edge_iterator(); itEdge.has_next(); itEdge.next())
-        {
-            itEdge.current()->unmark_red();
-        }
     }
 }
 
